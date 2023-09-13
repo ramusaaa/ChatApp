@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        #chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #messages {
+            list-style: none;
+            padding: 0;
+        }
+
+        #messages li {
+            margin: 10px 0;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        #chatbox {
+            margin-top: 20px;
+        }
+
+        #chatbox textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        #chatbox input[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #chatbox input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .custom-alert {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background-color: #f44336; /* Kırmızı renk */
+            color: white;
+            text-align: center;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <ul id="messages"></ul>
+    <form id="chatbox">
+        <textarea placeholder="Type your message..."></textarea>
+        <input type="submit" value="Send" />
+    </form>
+</div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script>
+    $(function(){
+        var socket = null;
+        var msgBox = $("#chatbox textarea");
+        var messages = $("#messages");
+        var alertBox = $(".custom-alert"); // Yeni alert kutusu
+
+        $("#chatbox").submit(function(){
+            if (!msgBox.val()) return false;
+            if (!socket) {
+                showAlert("Error: There is no socket connection.");
+                return false;
+            }
+
+            socket.send(msgBox.val());
+            msgBox.val("");
+            return false;
+        });
+
+        function showAlert(message) {
+            alertBox.text(message);
+            alertBox.slideDown().delay(2000).slideUp(); // 2 saniye göster sonra kapat
+        }
+
+        if (!window["WebSocket"]) {
+            showAlert("Error: Your browser does not support web sockets.");
+        } else {
+            socket = new WebSocket("ws://{{.Host}}/room");
+            socket.onclose = function() {
+                showAlert("Connection has been closed.");
+            }
+            socket.onmessage = function(e) {
+                messages.append($("<li>").text(e.data));
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
